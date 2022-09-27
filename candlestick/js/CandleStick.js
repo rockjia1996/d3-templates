@@ -40,7 +40,7 @@ class CandleStick {
 
         candles.exit().remove();
 
-        candles.enter().append()
+        candles.enter().append("line")
 
     }
 
@@ -67,7 +67,26 @@ class CandleStick {
         return cleaned;
     }
 
+    findMax(data){
+        /*
+            Sometimes, stocks continue traded during after market,
+            therefore there is a need to find the acutal max value 
+            among open, high, low, close
+        */
+        return d3.max(data, d => d3.max([d.open, d.high, d.low, d.close]))
+    }
 
+    findMin(){
+        /*
+            Sometimes, stocks continue traded during after market,
+            therefore there is a need to find the acutal low value 
+            among open, high, low, close.
+            Also some stocks like JNJ (Johnson & Johnson), the open price
+            during 1960s was the lowest price rather than the low price 
+            during the intraday.
+        */
+        return d3.min(data, d => d3.min([d.open, d.high, d.low, d.close]))
+    }
 
 
 }
