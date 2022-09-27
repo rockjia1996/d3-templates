@@ -22,7 +22,7 @@ d3.csv('data/JNJ.csv').then(rawData => {
     const data = [];
 
     // Format the raw data
-    rawData.slice(1*356).forEach(d => {
+    rawData.slice(0,10).forEach(d => {
         const { Open, High, Low, Close, Volume, Date: date } = d;
         data.push({
             open: Number(Open),
@@ -59,25 +59,20 @@ d3.csv('data/JNJ.csv').then(rawData => {
     if (xDomain === undefined)
         xDomain = weekdays(d3.min(xDate), d3.max(xDate));
     if (yDomain === undefined)
-        //yDomain = [d3.min(yLow), d3.max(yHigh)];
-        yDomain = [0, d3.max(yHigh)];
+        yDomain = [d3.min(yLow), d3.max(yHigh)];
+    //yDomain = [0, d3.max(yHigh)];
     if (xTicks === undefined)
-        xTicks = weeks(d3.min(xDomain), d3.max(xDomain), 2);
+        xTicks = weeks(d3.min(xDomain), d3.max(xDomain), 1);
 
-    const xScale = d3.scaleBand().domain(xDomain).range(xRange).padding(0.2).paddingOuter(0.2);
+    const xScale = d3.scaleBand().domain(xDomain).range(xRange).padding(0.2);
     const yScale = d3.scaleLinear().domain(yDomain).range(yRange);
 
     const xAxis = d3.axisBottom(xScale)
         .tickFormat(d3.utcFormat("%b %-d"))
-        .tickValues([
-            xTicks[0],
-            xTicks[Math.ceil(xTicks.length * 0.25)],
-            xTicks[Math.ceil(xTicks.length * 0.5)],
-            xTicks[Math.ceil(xTicks.length * 0.75)],
-            xTicks[xTicks.length - 1],
-        ]);
+        .tickValues(xTicks)
 
     const yAxis = d3.axisLeft(yScale).ticks(height / 40, "~f")
+    .tickFormat(d => `$${d}`)
 
 
     xAxisGroup
@@ -99,29 +94,15 @@ d3.csv('data/JNJ.csv').then(rawData => {
         .attr("transform", i => `translate(${xScale(xDate[i])},0)`);
 
     g.append("line")
-        .attr("y1", i => {
-            //console.log(yScale(yLow[i]))
-            return yScale(yLow[i])
-        })
-
-        .attr("y2", i => {
-            //console.log(yScale(yHigh[i]))
-            return yScale(yHigh[i])
-        });
+        .attr("y1", i => yScale(yLow[i]))
+        .attr("y2", i => yScale(yHigh[i]));
 
     colors = ["#4daf4a", "#999999", "#e41a1c"]
     g.append("line")
-        .attr("y1", i => {
-            console.log(yScale(yOpen[i]))
-            console.log(yOpen[i])
-            console.log(yScale(0))
-            console.log(yScale.domain())
-
-            return yScale(yOpen[i])
-        })
+        .attr("y1", i => yScale(yOpen[i]))
         .attr("y2", i => yScale(yClose[i]))
         .attr("stroke-width", xScale.bandwidth())
-        .attr("stroke", i => colors[1 + Math.sign(yLow[i] - yClose[i])]);
+        .attr("stroke", i => colors[1 + Math.sign(yOpen[i] - yClose[i])]);
 
 
 })
