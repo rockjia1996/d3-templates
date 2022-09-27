@@ -12,8 +12,8 @@ class CandleStick {
         this.xAxisCall = axisConfigs.xAxisCall;
         this.yAxisCall = axisConfigs.yAxisCall;
 
-        this.data = data;
-        this.presentingData = data;
+        this.data = this.dataCleaning(data);
+        this.presentingData = this.data;
         this.colors = ["#4daf4a", "#999999", "#e41a1c"];
 
         this.outerCanvas = d3.select(chartArea).append("svg")
@@ -36,7 +36,7 @@ class CandleStick {
     render() {
         const candles = this.chart.selectAll("g")
             .data(this.presentingData)
-            //transform to the correct x positions based on the x scale
+        //transform to the correct x positions based on the x scale
 
         candles.exit().remove();
 
@@ -44,13 +44,27 @@ class CandleStick {
 
     }
 
-    dataCleaning() {
+    dataCleaning(data) {
         // Remove all the data points that have missing values.
-        
-        this.data
+        const cleaned = [];
+        data.forEach(d => {
+            const { open, high, low, close, volume, date } = d;
+            const isCompelte = open && high && low && close && volume && date;
 
+            if (!isCompelte) return;
 
-
+            cleaned.push(
+                {
+                    open: Number(open),
+                    high: Number(high),
+                    low: Number(low),
+                    close: Number(close),
+                    volume: Number(volume),
+                    date: new Date(date)
+                }
+            )
+        })
+        return cleaned;
     }
 
 
