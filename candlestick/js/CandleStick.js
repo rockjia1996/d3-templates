@@ -30,6 +30,7 @@ class CandleStick {
 
         this.xAxisGroup = this.innerCanvas.append("g");
         this.yAxisGroup = this.innerCanvas.append("g");
+
     }
 
     // Doing data join, enter, update, exit
@@ -46,6 +47,7 @@ class CandleStick {
 
     dataCleaning(data) {
         // Remove all the data points that have missing values.
+        // Maybe sort the data ??
         const cleaned = [];
         data.forEach(d => {
             const { open, high, low, close, volume, date } = d;
@@ -67,7 +69,7 @@ class CandleStick {
         return cleaned;
     }
 
-    findMax(data){
+    findMax(data) {
         /*
             Sometimes, stocks continue traded during after market,
             therefore there is a need to find the acutal max value 
@@ -76,7 +78,7 @@ class CandleStick {
         return d3.max(data, d => d3.max([d.open, d.high, d.low, d.close]))
     }
 
-    findMin(){
+    findMin(data) {
         /*
             Sometimes, stocks continue traded during after market,
             therefore there is a need to find the acutal low value 
@@ -88,5 +90,33 @@ class CandleStick {
         return d3.min(data, d => d3.min([d.open, d.high, d.low, d.close]))
     }
 
+    dailySnapshot(start, end, stride = 1) {
+        const days = [];
+        const startIndex = this.data.findIndex(d => d.date === start);
+        const endIndex = this.data.findIndex(d => d.date === end);
+        const segment = this.data.slice(startIndex, endIndex - startIndex)
+
+        segment.forEach((d, index) => {
+            if (index % stride === 0)
+                days.push(d)
+        })
+
+
+    }
+
+    weeklySnapshot(start, end, stride = 0) {
+        const weeks = [];
+
+    }
+
+    monthlySnapshot(start, end, stride = 0) {
+        const months = [];
+
+    }
+
+    yearlySnapshot(start, end, stride = 0) {
+        const years = [];
+
+    }
 
 }
