@@ -93,12 +93,12 @@ class CandleStick {
         newCandles.append("title")
             .text(d => {
                 let tooltip =
-                    `Open ---- ${d.open}\n` +
-                    `High ---- ${d.high}\n` +
-                    `Low  ---- ${d.low}\n` +
-                    `Close ---- ${d.close}\n` +
-                    `Volume ---- ${d.volume}\n` +
-                    `Date ---- ${d.date.toDateString()}\n`
+                    `Open ----- ${d.open}\n` +
+                    `High ------ ${d.high}\n` +
+                    `Low  ------ ${d.low}\n` +
+                    `Close ----- ${d.close}\n` +
+                    `Volume --- ${d.volume}\n` +
+                    `Date ------ ${d.date.toDateString()}\n`
                 return tooltip;
             })
 
@@ -187,16 +187,12 @@ class CandleStick {
 
     xTicksValues(days, num = 10) {
         if (days.length <= num) return days;
-
         const first = days[0];
         const q1 = days[Math.floor(days.length * 0.25)];
         const median = days[Math.floor(days.length * 0.5)];
         const q3 = days[Math.floor(days.length * 0.75)];
         const last = days[days.length - 1];
-
         return [first, q1, median, q3, last]
-
-
     }
 
 
@@ -226,11 +222,11 @@ class CandleStick {
 
 
 
-d3.csv('data/BRKA.VI.csv').then(rawData => {
+d3.csv('data/KO.csv').then(rawData => {
     const data = [];
 
     // Format the raw data
-    rawData.slice(-30).forEach(d => {
+    rawData.slice(-180).forEach(d => {
         const { Open, High, Low, Close, Volume, Date: date } = d;
         data.push({
             open: Number(Open),
