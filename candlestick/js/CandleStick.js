@@ -44,11 +44,6 @@ class CandleStick {
             d3.max(this.data, d => d.date)
         );
 
-        //console.log(xDomain)
-        console.log(d3.min(this.data, d => d.date))
-        console.log(d3.max(this.data, d => d.date))
-
-
         const xRange = [0, this.width];
         const yDomain = [this.findMin(this.data), this.findMax(this.data)];
         const yRange = [this.height, 0];
@@ -97,9 +92,7 @@ class CandleStick {
 
         newCandles.append("title")
             .text(d => {
-                console.log(d)
-
-                let tooltip = 
+                let tooltip =
                     `Open ---- ${d.open}\n` +
                     `High ---- ${d.high}\n` +
                     `Low  ---- ${d.low}\n` +
@@ -109,11 +102,21 @@ class CandleStick {
                 return tooltip;
             })
 
+        // Need to special case like BRK.A
         newCandles
             .append("line")
-            .attr("y1", d => this.yScale(d.low))
-            .attr("y2", d => this.yScale(d.high))
-
+            .attr("y1", d => {
+                if (d.low === d.high)
+                    return this.yScale(d.low) - 1.5;
+                else
+                    return this.yScale(d.low)
+            })
+            .attr("y2", d => {
+                if (d.low === d.high)
+                    return this.yScale(d.high) + 1.5
+                else
+                    return this.yScale(d.high)
+            })
         newCandles
             .append("line")
             .attr("y1", d => this.yScale(d.open))
@@ -223,11 +226,11 @@ class CandleStick {
 
 
 
-d3.csv('data/JNJ.csv').then(rawData => {
+d3.csv('data/BRKA.VI.csv').then(rawData => {
     const data = [];
 
     // Format the raw data
-    rawData.slice(-180).forEach(d => {
+    rawData.slice(-30).forEach(d => {
         const { Open, High, Low, Close, Volume, Date: date } = d;
         data.push({
             open: Number(Open),
