@@ -7,29 +7,52 @@ class CandleStick {
         this.marginTop = dimConfigs.marginTop;
         this.marginBottom = dimConfigs.marginBottom;
 
-        this.xScale = scaleConfigs.xScale;
-        this.yScale = scaleConfigs.yScale;
-        this.xAxisCall = axisConfigs.xAxisCall;
-        this.yAxisCall = axisConfigs.yAxisCall;
+        
+        this.xScale = d3.scaleBand();
+        this.yScale = d3.scaleLinear();
 
         this.data = this.dataCleaning(data);
         this.presentingData = this.data;
         this.colors = ["#4daf4a", "#999999", "#e41a1c"];
 
         this.outerCanvas = d3.select(chartArea).append("svg")
-            .attr("width", width + marginLeft + marginRight)
-            .attr("height", height + marginTop + marginBottom);
+        .attr("width", this.width + this.marginLeft + this.marginRight)
+        .attr("height", this.height + this.marginTop + this.marginBottom);
         this.innerCanvas = this.outerCanvas.append("g")
-            .attr("transform",
-                `translate(${this.marginLeft}, ${this.marginTop})`)
-            .attr("width", width)
-            .attr("height", height);
+        .attr("transform",
+        `translate(${this.marginLeft}, ${this.marginTop})`)
+        .attr("width", this.width)
+        .attr("height", this.height);
         this.chart = this.innerCanvas.append("g")
             .attr("stroke", "currentColor")
             .attr("stroke-linecap", "round");
-
+            
         this.xAxisGroup = this.innerCanvas.append("g");
         this.yAxisGroup = this.innerCanvas.append("g");
+        
+        const xDomain = [
+            d3.min(this.data, d => d.date),
+            d3.max(this.data, d => d.date)
+        ];
+        const xRange = [0, this.width];
+        const yDomain = [this.findMin(this.data), this.findMax(this.data)];
+        const yRange = [this.height, 0];
+        this.xScale.domain(xDomain).range(xRange);
+        this.yScale.domain(yDomain).range(yRange);
+
+        this.xAxisCall = d3.axisBottom(this.xScale)
+            .tickFormat(d3.utcFormat("%b %-d"));
+        this.yAxisCall = d3.axisLeft(this.yScale);
+
+
+        this.xAxisGroup
+            .attr("transform", `translate(0, ${this.height})`)
+            .call(this.xAxisCall)
+
+        this.yAxisGroup
+            .call(this.yAxisCall)
+
+
 
     }
 
@@ -51,7 +74,13 @@ class CandleStick {
         const cleaned = [];
         data.forEach(d => {
             const { open, high, low, close, volume, date } = d;
-            const isCompelte = open && high && low && close && volume && date;
+            const isCompelte = 
+                open !== undefined && 
+                high !== undefined && 
+                low  !== undefined && 
+                close !== undefined && 
+                volume !== undefined && 
+                date !== undefined;
 
             if (!isCompelte) return;
 
@@ -90,28 +119,67 @@ class CandleStick {
         return d3.min(data, d => d3.min([d.open, d.high, d.low, d.close]))
     }
 
-    dailySnapshot(start, end, stride=1) {
-        return d3.utcDays(start, end+1, stride);
+    dailySnapshot(start, end, stride = 1) {
+        return d3.utcDays(start, end + 1, stride);
     }
 
-    weekdaysSnapshot(start, end, stride=1) {
+    weekdaysSnapshot(start, end, stride = 1) {
         return d3.utcMonday
             .every(stride)
-            .range(start, end+1)
+            .range(start, end + 1)
             .filter(d => d.getUTCday() !== 0 && d.getUTCDay() !== 6);
     }
 
-    weeklySnapshot(start, end, stride=1) {
-        return d3.utcMonday.every(stride).range(start, end+1)
+    weeklySnapshot(start, end, stride = 1) {
+        return d3.utcMonday.every(stride).range(start, end + 1)
     }
 
 
-    monthlySnapshot(start, end, stride=1) {
-        return d3.utcMonths(start, end+1, stride);
+    monthlySnapshot(start, end, stride = 1) {
+        return d3.utcMonths(start, end + 1, stride);
     }
 
-    yearlySnapshot(start, end, stride=1) {
-        return d3.utcYear(start, end+1, stride);
+    yearlySnapshot(start, end, stride = 1) {
+        return d3.utcYear(start, end + 1, stride);
     }
 
 }
+
+
+
+d3.csv('data/JNJ.csv').then(rawData => {
+    const data = [];
+
+    // Format the raw data
+    rawData.slice(0,10).forEach(d => {
+        const { Open, High, Low, Close, Volume, Date: date } = d;
+        data.push({
+            open: Number(Open),
+            high: Number(High),
+            low: Number(Low),
+            close: Number(Close),
+            volume: Number(Volume),
+            date: new Date(date)
+        });
+    })
+  
+    const dimConfigs = {
+        width: 400,
+        height: 300,
+        marginLeft: 100,
+        marginRight: 100,
+        marginTop: 100,
+        marginBottom: 100
+    }
+
+    const chart = new CandleStick(
+        "#chart",
+        dimConfigs,
+        {},
+        {},
+        data
+    )
+
+
+})
+
