@@ -90,33 +90,28 @@ class CandleStick {
         return d3.min(data, d => d3.min([d.open, d.high, d.low, d.close]))
     }
 
-    dailySnapshot(start, end, stride = 1) {
-        const days = [];
-        const startIndex = this.data.findIndex(d => d.date === start);
-        const endIndex = this.data.findIndex(d => d.date === end);
-        const segment = this.data.slice(startIndex, endIndex - startIndex)
-
-        segment.forEach((d, index) => {
-            if (index % stride === 0)
-                days.push(d)
-        })
-
-
+    dailySnapshot(start, end, stride=1) {
+        return d3.utcDays(start, end+1, stride);
     }
 
-    weeklySnapshot(start, end, stride = 0) {
-        const weeks = [];
-
+    weekdaysSnapshot(start, end, stride=1) {
+        return d3.utcMonday
+            .every(stride)
+            .range(start, end+1)
+            .filter(d => d.getUTCday() !== 0 && d.getUTCDay() !== 6);
     }
 
-    monthlySnapshot(start, end, stride = 0) {
-        const months = [];
-
+    weeklySnapshot(start, end, stride=1) {
+        return d3.utcMonday.every(stride).range(start, end+1)
     }
 
-    yearlySnapshot(start, end, stride = 0) {
-        const years = [];
 
+    monthlySnapshot(start, end, stride=1) {
+        return d3.utcMonths(start, end+1, stride);
+    }
+
+    yearlySnapshot(start, end, stride=1) {
+        return d3.utcYear(start, end+1, stride);
     }
 
 }
