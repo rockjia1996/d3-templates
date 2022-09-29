@@ -197,8 +197,10 @@ class CandleStick {
 
 
 
+
+
     dailySnapshot(start, end, stride = 1) {
-        return d3.utcDays(start, +end + 1, stride);
+        return d3.utcDays(start, +end+1, stride);
     }
 
     weekdaysSnapshot(start, end, stride = 1) {
@@ -222,11 +224,14 @@ class CandleStick {
 
 
 
-d3.csv('data/KO.csv').then(rawData => {
+d3.csv('data/AAPL.csv').then(rawData => {
     const data = [];
 
+
+
+
     // Format the raw data
-    rawData.slice(-180).forEach(d => {
+    rawData.slice(-365).forEach(d => {
         const { Open, High, Low, Close, Volume, Date: date } = d;
         data.push({
             open: Number(Open),
@@ -238,9 +243,37 @@ d3.csv('data/KO.csv').then(rawData => {
         });
     })
 
+
+
+    const selectTimePeriod = (data, start, end, weekends=false) => {
+        const startIndex = data.findIndex(
+            d => d.date.getTime() === start.getTime());
+        const endIndex = data.findIndex(
+            d => d.date.getTime() === end.getTime());
+        
+        console.log(startIndex)
+        if (weekends)
+            return data.slice(startIndex, endIndex+1);
+        else
+            return data.slice(startIndex, endIndex+1).filter(
+                d => d.date.getUTCDay() !== 0 && d.date.getUTCDay() !== 6);
+    }
+
+
+
+    const result = selectTimePeriod(
+        data, 
+        new Date("2022-03-29"), 
+        new Date("2022-09-28")
+    )
+
+    console.log(result)
+
+
+
     const dimConfigs = {
-        width: 800,
-        height: 400,
+        width: 1200,
+        height: 300,
         marginLeft: 100,
         marginRight: 100,
         marginTop: 100,
@@ -252,7 +285,7 @@ d3.csv('data/KO.csv').then(rawData => {
         dimConfigs,
         {},
         {},
-        data
+        result
     )
 
 
