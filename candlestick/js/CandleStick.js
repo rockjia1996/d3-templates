@@ -24,7 +24,9 @@ class CandleStick {
                     this.width + this.marginRight + this.marginRight,
                     this.height + this.marginTop + this.marginBottom
                 ])
-            .attr("style", `max-width: 100%; height: auto; height: intrinsic;background-color:#f4f4f4;`)
+            .attr("style", 
+            `max-width: 100%; 
+            height: auto; height: intrinsic;background-color:#f4f4f4;`)
 
 
         this.innerCanvas = this.outerCanvas.append("g")
@@ -97,7 +99,8 @@ class CandleStick {
         const newCandles = candles.enter()
             .append("g")
             .attr("transform", d =>
-                `translate(${this.xScale(d.date) + this.xScale.bandwidth() / 2}, 0)`)
+                `translate(${
+                    this.xScale(d.date) + this.xScale.bandwidth()/2}, 0)`)
             .on("mouseover", (event, data) => {
                 event.target.setAttribute("fill-opacity", "0.6")
                 event.target.setAttribute("fill", "grey")
@@ -107,15 +110,16 @@ class CandleStick {
                 event.target.setAttribute("fill", "transparent")
             })
 
+        const priceFormater = (price) => Number.parseFloat(price).toFixed(2);
         newCandles
             .append("title")
             .text(d => {
                 let tooltip =
-                    `Open ----- ${d.open}\n` +
-                    `High ------ ${d.high}\n` +
-                    `Low  ------ ${d.low}\n` +
-                    `Close ----- ${d.close}\n` +
-                    `Volume --- ${d.volume}\n` +
+                    `Open ----- $${priceFormater(d.open)}\n` +
+                    `High ------ $${priceFormater(d.high)}\n` +
+                    `Low  ------ $${priceFormater(d.low)}\n` +
+                    `Close ----- $${priceFormater(d.close)}\n` +
+                    `Volume --- ${d.volume.toLocaleString()}\n` +
                     `Date ------ ${d.date.toDateString()}\n`
                 return tooltip;
             })
@@ -304,11 +308,11 @@ class CandleStick {
         return [first, q1, median, q3, last]
     }
 
-    queryTimePeriod(period, weekends = false) {
+    queryPast(period) {
 
         const findStartDate = (period) => {
             const bisect = d3.bisector(d => d.date);
-            const latest = this.data.slice(-1)[0].date;
+            const latest = this.data.at(-1).date;
             const month = latest.getMonth();
             const year = latest.getFullYear();
             const day = latest.getDay();
@@ -324,75 +328,47 @@ class CandleStick {
                     : new Date(`${year}-${(month + 6)}-${day}`)
             }
 
-            if (period === "ytd") {
-                startDate = new Date(`${year}-01-01`);
-            }
-
-            if (period === "1y") {
-                startDate = new Date(`${year - 1}-${month}-${day}`);
-            }
-
-            if (period === "5y") {
-                startDate = new Date(`${year - 5}-${month}-${day}`);
-            }
-
-            if (period === "max") {
+            if (period === "ytd") 
+                startDate=new Date(`${year}-01-01`);
+            if (period === "1y")   
+                startDate=new Date(`${year-1}-${month}-${day}`);
+            if (period === "5y") 
+                startDate = new Date(`${year-5}-${month}-${day}`);
+            if (period === "max")
                 return this.data.at(0).date;
-            }
 
             const index = bisect.left(this.data, startDate);
             return this.data[index].date;
-
         }
 
-        const selected = this.selectTimePeriod(
-            this.data,
-            findStartDate(period),
-            this.data.slice(-1)[0].date);
-
-        if (selected.length >= 600) {
-            const stride = Math.floor(selected.length / 600);
-            let next = 0;
-
-            const snapshots = [];
-            selected.forEach((d, i) => {
-                if (i === next) {
-                    next += stride;
-                    snapshots.push(d)
-                }
-            })
-
-
-            if (snapshots.at(-1).date.getTime()
-                !== this.data.at(-1).date.getTime())
-                snapshots.push(this.data.at(-1))
-
-            this.presentingData = snapshots;
-            this.render();
-            return;
-        }
-
-        this.presentingData = selected;
+        console.log(this.data.at(-1).date)
+        this.presentingData = this.queryTimePeriod(
+            findStartDate(period), this.data.at(-1).date)
         this.render();
     }
 
+    queryTimePeriod(start, end, snapshots=600){
+        const bisect = d3.bisector(d => d.date);
+        const startIndex = bisect.left(this.data, start);
+        const endIndex = bisect.left(this.data, end);
+        const selected = this.data.slice(startIndex, endIndex+1);
 
+        if (selected.length > snapshots){
+            const sliced = [];
+            const stride = Math.floor(selected.length / snapshots);
+            let next = 0;
 
-    selectTimePeriod(data, start, end, weekends = false) {
-        // Find the closest dates to the specificed dates
-
-        const startIndex = data.findIndex(
-            d => d.date.getTime() === start.getTime());
-        const endIndex = data.findIndex(
-            d => d.date.getTime() === end.getTime());
-
-        if (weekends)
-            return data.slice(startIndex, endIndex + 1);
+            selected.forEach((d, i) => {
+                if (i === next || i === selected.length-1){
+                    sliced.push(d);
+                    next += stride;
+                }               
+            })
+            return sliced;
+        }
         else
-            return data.slice(startIndex, endIndex + 1).filter(
-                d => d.date.getUTCDay() !== 0 && d.date.getUTCDay() !== 6);
+            return selected;
     }
-
 }
 
 
@@ -422,20 +398,16 @@ d3.csv('data/JNJ.csv').then(rawData => {
     }
 
     const chart = new CandleStick("#chart", dims, {}, {}, data);
-    //chart.queryTimePeriod("6m")
-    //chart.queryTimePeriod("1m")
-
-
 
     const btns = document.querySelector('#btns').children
-    btns[0].onclick = () => chart.queryTimePeriod("1d")
-    btns[1].onclick = () => chart.queryTimePeriod("5d")
-    btns[2].onclick = () => chart.queryTimePeriod("1m")
-    btns[3].onclick = () => chart.queryTimePeriod("6m")
-    btns[4].onclick = () => chart.queryTimePeriod("ytd")
-    btns[5].onclick = () => chart.queryTimePeriod("1y")
-    btns[6].onclick = () => chart.queryTimePeriod("5y")
-    btns[7].onclick = () => chart.queryTimePeriod("max")
+    btns[0].onclick = () => chart.queryPast("1d")
+    btns[1].onclick = () => chart.queryPast("5d")
+    btns[2].onclick = () => chart.queryPast("1m")
+    btns[3].onclick = () => chart.queryPast("6m")
+    btns[4].onclick = () => chart.queryPast("ytd")
+    btns[5].onclick = () => chart.queryPast("1y")
+    btns[6].onclick = () => chart.queryPast("5y")
+    btns[7].onclick = () => chart.queryPast("max")
 
 })
 
