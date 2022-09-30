@@ -126,20 +126,16 @@ class CandleStick {
 
         newCandles
             .append("line")
+            .attr("class", "high-low")
             .transition()
             .duration(600)
-            .attr("class", "high-low")
             .attr("y1", d => {
-                if (d.low === d.high)
-                    return this.yScale(d.low) - 1.5;
-                else
-                    return this.yScale(d.low)
+                if (d.low === d.high) return this.yScale(d.low) - 1.5;
+                else return this.yScale(d.low)
             })
             .attr("y2", d => {
-                if (d.low === d.high)
-                    return this.yScale(d.high) + 1.5
-                else
-                    return this.yScale(d.high)
+                if (d.low === d.high) return this.yScale(d.high) + 1.5
+                else return this.yScale(d.high)
             })
 
         newCandles
@@ -163,8 +159,8 @@ class CandleStick {
         // Update
         candles
             .attr("transform", d =>
-                `translate(${this.xScale(d.date) + this.xScale.bandwidth() / 2}, 0)`)
-
+                `translate(${
+                    this.xScale(d.date) + this.xScale.bandwidth() / 2}, 0)`)
         candles.selectAll(".high-low")
             .transition()
             .duration(600)
@@ -197,10 +193,9 @@ class CandleStick {
         /* Y axis gridline: Data join, enter, update, exit */
         const yGridLine = this.yGridLineGroup.selectAll("line")
             .data(this.yScale.ticks())
-
         yGridLine.exit().remove()
-
         yGridLine.enter().append("line")
+            .merge(yGridLine)
             .transition()
             .duration(550)
             .attr("x1", 0)
@@ -212,20 +207,6 @@ class CandleStick {
             .attr("stroke", "#b6b6b6")
             .attr("stroke-width", "1px")
             .attr("stroke-dasharray", 2)
-
-        yGridLine
-            .transition()
-            .duration(550)
-            .attr("x1", 0)
-            .attr("y1", d => this.yScale(d))
-            .attr("x2", this.width)
-            .attr("y2", d => this.yScale(d))
-            .attr("fill", "none")
-            .attr("shape-rendering", "crispEdges")
-            .attr("stroke", "#b6b6b6")
-            .attr("stroke-width", "1px")
-            .attr("stroke-dasharray", 2)
-
     }
 
     dataCleaning(data) {
@@ -255,26 +236,9 @@ class CandleStick {
                 }
             )
         })
-        return cleaned;
-    }
 
-    dataFormatChecker() {
-        // To Do: check if data is sorted, contains open, high, low, close,
-        // volume, date
-    }
-
-    dataSnapShot(data, stride = 1) {
-        let target = 0;
-        const snapshots = []
-
-        data.forEach((item, index) => {
-            if (index === target) {
-                snapshots.push(item);
-                target += stride;
-            }
-        })
-
-        return snapshots;
+        return cleaned.sort(
+            (dat1,dat2) => dat1.date.getTime() - dat2.date.getTime());
     }
 
     findMax(data) {
