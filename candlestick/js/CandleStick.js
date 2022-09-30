@@ -74,10 +74,14 @@ class CandleStick {
         const yAxisCall = d3.axisRight(this.yScale);
 
         this.xAxisGroup
+            .transition()
+            .duration(600)
             .call(xAxisCall)
             .call(g => g.select(".domain").remove())
 
         this.yAxisGroup
+            .transition()
+            .duration(600)
             .call(yAxisCall)
             .call(g => g.select(".domain").remove())
 
@@ -118,6 +122,8 @@ class CandleStick {
 
         newCandles
             .append("line")
+            .transition()
+            .duration(600)
             .attr("class", "high-low")
             .attr("y1", d => {
                 if (d.low === d.high)
@@ -134,6 +140,8 @@ class CandleStick {
 
         newCandles
             .append("line")
+            .transition()
+            .duration(600)
             .attr("class", "open-close")
             .attr("y1", d => this.yScale(d.open))
             .attr("y2", d => this.yScale(d.close))
@@ -151,9 +159,11 @@ class CandleStick {
         // Update
         candles
             .attr("transform", d =>
-                `translate(${this.xScale(d.date)+this.xScale.bandwidth()/2}, 0)`)
+                `translate(${this.xScale(d.date) + this.xScale.bandwidth() / 2}, 0)`)
 
         candles.selectAll(".high-low")
+            .transition()
+            .duration(600)
             .attr("y1", d => {
                 if (d.low === d.high) return this.yScale(d.low) - 1.5;
                 else return this.yScale(d.low)
@@ -165,6 +175,8 @@ class CandleStick {
 
         candles
             .selectAll(".open-close")
+            .transition()
+            .duration(600)
             .attr("y1", d => this.yScale(d.open))
             .attr("y2", d => this.yScale(d.close))
             .attr("stroke-width", this.xScale.bandwidth())
@@ -186,7 +198,7 @@ class CandleStick {
 
         yGridLine.enter().append("line")
             .transition()
-            .duration(50)
+            .duration(550)
             .attr("x1", 0)
             .attr("y1", d => this.yScale(d))
             .attr("x2", this.width)
@@ -199,7 +211,7 @@ class CandleStick {
 
         yGridLine
             .transition()
-            .duration(50)
+            .duration(550)
             .attr("x1", 0)
             .attr("y1", d => this.yScale(d))
             .attr("x2", this.width)
@@ -333,10 +345,34 @@ class CandleStick {
 
         }
 
-        this.presentingData = this.selectTimePeriod(
+        const selected = this.selectTimePeriod(
             this.data,
             findStartDate(period),
             this.data.slice(-1)[0].date);
+
+        if (selected.length >= 600) {
+            const stride = Math.floor(selected.length / 600);
+            let next = 0;
+
+            const snapshots = [];
+            selected.forEach((d, i) => {
+                if (i === next) {
+                    next += stride;
+                    snapshots.push(d)
+                }
+            })
+
+
+            if (snapshots.at(-1).date.getTime()
+                !== this.data.at(-1).date.getTime())
+                snapshots.push(this.data.at(-1))
+
+            this.presentingData = snapshots;
+            this.render();
+            return;
+        }
+
+        this.presentingData = selected;
         this.render();
     }
 
@@ -357,34 +393,10 @@ class CandleStick {
                 d => d.date.getUTCDay() !== 0 && d.date.getUTCDay() !== 6);
     }
 
-
-
-    days(start, end, stride = 1) {
-        return d3.utcDays(start, +end + 1, stride);
-    }
-
-    weekdays(start, end, stride = 1) {
-        return d3.utcDays(start, +end + 1, stride)
-            .filter(d => d.getUTCDay() !== 0 && d.getUTCDay() !== 6);
-    }
-
-    weeklySnapshot(start, end, stride = 1) {
-        return d3.utcMonday.every(stride).range(start, +end + 1)
-    }
-
-    monthlySnapshot(start, end, stride = 1) {
-        return d3.utcMonths(start, +end + 1, stride);
-    }
-
-    yearlySnapshot(start, end, stride = 1) {
-        return d3.utcYear(start, +end + 1, stride);
-    }
-
 }
 
 
-
-d3.csv('data/AAPL.csv').then(rawData => {
+d3.csv('data/JNJ.csv').then(rawData => {
     const data = [];
 
     // Format the raw data
