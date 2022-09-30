@@ -140,9 +140,9 @@ class CandleStick {
 
         newCandles
             .append("line")
+            .attr("class", "open-close")
             .transition()
             .duration(600)
-            .attr("class", "open-close")
             .attr("y1", d => this.yScale(d.open))
             .attr("y2", d => this.yScale(d.close))
             .attr("stroke-width", this.xScale.bandwidth())
@@ -152,7 +152,7 @@ class CandleStick {
         newCandles.append("rect")
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.height)
-            .attr("transform", `translate(${-this.xScale.bandwidth() / 2}, 0)`)
+            .attr("transform", `translate(${-this.xScale.bandwidth()/2}, 0)`)
             .attr("stroke", "none")
             .attr("fill", "transparent")
 
@@ -211,7 +211,7 @@ class CandleStick {
 
     dataCleaning(data) {
         // Remove all the data points that have missing values.
-        // Maybe sort the data ??
+        // And sort the given data based on date
         const cleaned = [];
         data.forEach(d => {
             const { open, high, low, close, volume, date } = d;
@@ -305,7 +305,6 @@ class CandleStick {
             return this.data[index].date;
         }
 
-        console.log(this.data.at(-1).date)
         this.presentingData = this.queryTimePeriod(
             findStartDate(period), this.data.at(-1).date)
         this.render();
@@ -361,7 +360,18 @@ d3.csv('data/JNJ.csv').then(rawData => {
         marginBottom: 100
     }
 
+    const miniDims = {
+        width: 1200,
+        height: 100,
+        marginLeft: 100,
+        marginRight: 100,
+        marginTop: 10,
+        marginBottom: 50
+   
+    }
+
     const chart = new CandleStick("#chart", dims, {}, {}, data);
+    const miniChart = new MiniLineChart("#mini-chart", miniDims, data);
 
     const btns = document.querySelector('#btns').children
     btns[0].onclick = () => chart.queryPast("1d")

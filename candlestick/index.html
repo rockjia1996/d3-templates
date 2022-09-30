@@ -6,8 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Candle Chart Demo</title>
     <style>
-        .domain{
-            display:none;
+        .domain {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            padding: 3px 5px 3px 5px;
+        }
+
+        .tabs button {
+            display: inline-block;
+            border: none;
+            padding: 2px;
+            width: 40px;
+            cursor: pointer;
+            background-color: #555555;
+            color: white;
+        }
+
+        .tabs button:hover {
+            background-color: #191919;
         }
     </style>
 </head>
@@ -21,7 +41,11 @@
             </div>
         </section>
         <section>
-            <div id="btns">
+            <div id="mini-chart">
+            </div>
+        </section>
+        <section>
+            <div id="btns" class="tabs">
                 <button>1D</button>
                 <button>5D</button>
                 <button>1M</button>
@@ -40,6 +64,7 @@
         <script src="js/main.js"></script>
     -->
     <script src="js/d3.min.js"></script>
+    <script src="js/MiniLineChart.js"></script>
     <script src="js/CandleStick.js"></script>
 
 </body>
