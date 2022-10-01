@@ -26,7 +26,7 @@ class CandleStick {
                 ])
             .attr("style", 
             `max-width: 100%; 
-            height: auto; height: intrinsic;background-color:white;`)
+            height: auto; height: intrinsic;`)
 
 
         this.innerCanvas = this.outerCanvas.append("g")
