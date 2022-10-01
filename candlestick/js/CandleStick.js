@@ -71,7 +71,7 @@ class CandleStick {
 
         // Configure x and y axis
         const xAxisCall = d3.axisBottom(this.xScale)
-            .tickFormat(d3.utcFormat("%b %-d"))
+            .tickFormat(d => d.toDateString())
             .tickValues(this.xTicksValues(xDomain, 10));
         const yAxisCall = d3.axisRight(this.yScale);
 

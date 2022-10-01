@@ -1,40 +1,34 @@
 class MiniLineChart {
     constructor(chartArea, dimComfigs, brushConfigs, data) {
-        const { width, height } = dimComfigs;
-        const { marginLeft, marginRight, marginTop, marginBottom } = dimComfigs;
-
-        this.width = width;
-        this.height = height;
-        this.marginLeft = marginLeft;
-        this.marginRight = marginRight;
-        this.marginTop = marginTop;
-        this.marginBottom = marginBottom;
-
+        this.dimComfigs = dimComfigs;
         this.brushConfigs = brushConfigs;
+
+        const { width, height } = this.dimComfigs;
+        const { marginLeft, marginRight, marginTop, marginBottom } = dimComfigs;
         this.data = this.dataCleaning(data);
 
         this.outerCanvas = d3.select(chartArea).append("svg")
-            .attr("width", this.width + this.marginLeft + this.marginRight)
-            .attr("height", this.height + this.marginTop + this.marginBottom)
+            .attr("width", width + marginLeft + marginRight)
+            .attr("height", height + marginTop + marginBottom)
             .attr("viewBox",
                 [
-                    0,
-                    0,
-                    this.width + this.marginRight + this.marginRight,
-                    this.height + this.marginTop + this.marginBottom
+                    0, 0,
+                    width + marginRight + marginRight,
+                    height + marginTop + marginBottom
                 ])
             .attr("style",
                 `max-width: 100%; 
             height: auto; height: intrinsic;`)
+
         this.innerCanvas = this.outerCanvas.append("g")
-            .attr("width", this.width)
-            .attr("height", this.height)
+            .attr("width", width)
+            .attr("height", height)
             .attr("transform",
-                `translate(${this.marginLeft}, ${this.marginTop})`)
+                `translate(${marginLeft}, ${marginTop})`)
 
         this.chart = this.innerCanvas.append("g")
-            .attr("width", this.width)
-            .attr("height", this.height);
+            .attr("width", width)
+            .attr("height", height)
 
         this.brushGroup = this.innerCanvas.append("g")
         this.xAxisGroup = this.innerCanvas.append("g")
@@ -46,48 +40,122 @@ class MiniLineChart {
             d3.min(this.data, d => d.close), d3.max(this.data, d => d.close)];
 
         this.xScale = d3.scaleTime()
-            .domain(xDomain).range([0, this.width]);
+            .domain(xDomain).range([0, width]);
         this.yScale = d3.scaleLinear()
-            .domain(yDomain).range([this.height, 0]);
+            .domain(yDomain).range([height, 0]);
 
 
         this.xAxisCall = d3.axisBottom(this.xScale).ticks(5)
             .tickFormat(d => d.toDateString());
         this.xAxisGroup.call(this.xAxisCall)
-            .attr("transform", `translate(0, ${this.height})`);
+            .attr("transform", `translate(0, ${height})`);
+
 
         this.brushCall = d3.brushX()
-            .extent([[0, 0], [this.width, this.height]])
+            .extent([[0, 0], [width, height]])
+
+        this.brushCall
             .on("brush", d => {
+
+                /*
                 let start = this.xScale.invert(d.selection[0]);
-                let end   = this.xScale.invert(d.selection[1]);
+                let end = this.xScale.invert(d.selection[1]);
                 this.brushConfigs.onBrush(start, end)
+                */
+                               const bisect = d3.bisector(dat => dat.date);
+                const xLeft = d.selection[0]
+                const xRight = d.selection[1]
+
+                let start = this.xScale.invert(xLeft);
+                let end = this.xScale.invert(xRight);
+                const startIndex = bisect.left(this.data, start);
+                const endIndex = bisect.left(this.data, end);
+
+                const maxDataPoints = 600;
+                if (endIndex - startIndex > maxDataPoints) {
+                    const brushCenter = xLeft + 0.5 * (xRight - xLeft)
+
+                    const brushWidth = width -
+                        (this.data.length <= maxDataPoints
+                            ? this.xScale(this.data[0].date)
+                            : this.xScale(this.data.at(-600).date))
+
+
+                    const moveTo = [
+                        brushCenter - 0.49 * brushWidth,
+                        brushCenter + 0.49 * brushWidth
+                    ]
+
+                    this.brushGroup
+                        .call(this.brushCall)
+                        .call(this.brushCall.move, moveTo
+                        )
+                    let start = this.xScale.invert(moveTo[0]);
+                    let end = this.xScale.invert(moveTo[1]);
+
+                    this.brushConfigs.onBrush(start, end)
+
+                }
+                else {
+                    this.brushConfigs.onBrush(start, end)
+                }
             })
-            .on("end", d => {
-                let start = this.xScale.invert(d.selection[0]);
-                let end   = this.xScale.invert(d.selection[1]);
-                this.brushConfigs.onBrush(start, end)
+            .on("end", (d) => {
+                const bisect = d3.bisector(dat => dat.date);
+                const xLeft = d.selection[0]
+                const xRight = d.selection[1]
+
+                let start = this.xScale.invert(xLeft);
+                let end = this.xScale.invert(xRight);
+                const startIndex = bisect.left(this.data, start);
+                const endIndex = bisect.left(this.data, end);
+
+                const maxDataPoints = 600;
+                if (endIndex - startIndex > maxDataPoints) {
+                    const brushCenter = xLeft + 0.5 * (xRight - xLeft)
+
+                    const brushWidth = width -
+                        (this.data.length <= maxDataPoints
+                            ? this.xScale(this.data[0].date)
+                            : this.xScale(this.data.at(-600).date))
+
+
+                    const moveTo = [
+                        brushCenter - 0.49 * brushWidth,
+                        brushCenter + 0.49 * brushWidth
+                    ]
+
+                    this.brushGroup
+                        .call(this.brushCall)
+                        .call(this.brushCall.move, moveTo
+                        )
+                    let start = this.xScale.invert(moveTo[0]);
+                    let end = this.xScale.invert(moveTo[1]);
+
+                    this.brushConfigs.onBrush(start, end)
+
+                }
+                else {
+                    this.brushConfigs.onBrush(start, end)
+                }
             })
 
 
         this.brushGroup
             .call(this.brushCall)
-            .call(this.brushCall.move, 
+            .call(this.brushCall.move,
                 [
                     this.data.length <= 365
-                        ?   this.xScale(this.data[0].date)
-                        :   this.xScale(this.data.at(-365).date), 
-                    this.width
+                        ? this.xScale(this.data[0].date)
+                        : this.xScale(this.data.at(-365).date),
+                    width
                 ])
 
         this.render();
     }
 
-
     render() {
-
         const line = this.chart.selectAll(".line").data([this.data])
-
         const lineMapper = d3.line()
             .x(d => this.xScale(d.date))
             .y(d => this.yScale(d.close))
@@ -100,15 +168,12 @@ class MiniLineChart {
             .attr("stroke", "#36394D")
             .attr("stroke-width", "1.3px")
 
-
         line.enter().append("path")
             .attr("class", "line")
             .attr("fill", "none")
             .attr("stroke", "steelblue")
             .attr("stroke-width", 1.5)
             .attr("d", d => lineMapper(d))
-
-
     }
 
     dataCleaning(data) {
@@ -117,21 +182,10 @@ class MiniLineChart {
         const cleaned = [];
         data.forEach(d => {
             const { close, date } = d;
-            const isCompelte =
-                close !== undefined &&
-                date !== undefined;
-
+            const isCompelte = close !== undefined && date !== undefined;
             if (!isCompelte) return;
-
-            cleaned.push(
-                {
-                    close: Number(close),
-                    date: new Date(date)
-                }
-            )
+            cleaned.push({ close: Number(close), date: new Date(date) });
         })
-
-        return cleaned.sort(
-            (dat1, dat2) => dat1.date.getTime() - dat2.date.getTime());
+        return cleaned.sort((d1, d2) => d1.date.getTime() - d2.date.getTime());
     }
 }
