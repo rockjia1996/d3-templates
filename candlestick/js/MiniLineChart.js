@@ -1,5 +1,5 @@
 class MiniLineChart {
-    constructor(chartArea, dimComfigs, data) {
+    constructor(chartArea, dimComfigs, brushConfigs, data) {
         const { width, height } = dimComfigs;
         const { marginLeft, marginRight, marginTop, marginBottom } = dimComfigs;
 
@@ -10,6 +10,7 @@ class MiniLineChart {
         this.marginTop = marginTop;
         this.marginBottom = marginBottom;
 
+        this.brushConfigs = brushConfigs;
         this.data = this.dataCleaning(data);
 
         this.outerCanvas = d3.select(chartArea).append("svg")
@@ -32,9 +33,10 @@ class MiniLineChart {
                 `translate(${this.marginLeft}, ${this.marginTop})`)
 
         this.chart = this.innerCanvas.append("g")
-        //.attr("width", this.width)
-        //.attr("height", this.height);
+            .attr("width", this.width)
+            .attr("height", this.height);
 
+        this.brushGroup = this.innerCanvas.append("g")
         this.xAxisGroup = this.innerCanvas.append("g")
         this.yAxisGroup = this.innerCanvas.append("g")
 
@@ -48,10 +50,35 @@ class MiniLineChart {
         this.yScale = d3.scaleLinear()
             .domain(yDomain).range([this.height, 0]);
 
+
         this.xAxisCall = d3.axisBottom(this.xScale).ticks(5)
             .tickFormat(d => d.toDateString());
         this.xAxisGroup.call(this.xAxisCall)
             .attr("transform", `translate(0, ${this.height})`);
+
+        this.brushCall = d3.brushX()
+            .extent([[0, 0], [this.width, this.height]])
+            .on("brush", d => {
+                let start = this.xScale.invert(d.selection[0]);
+                let end   = this.xScale.invert(d.selection[1]);
+                this.brushConfigs.onBrush(start, end)
+            })
+            .on("end", d => {
+                let start = this.xScale.invert(d.selection[0]);
+                let end   = this.xScale.invert(d.selection[1]);
+                this.brushConfigs.onBrush(start, end)
+            })
+
+
+        this.brushGroup
+            .call(this.brushCall)
+            .call(this.brushCall.move, 
+                [
+                    this.data.length <= 365
+                        ?   this.xScale(this.data[0].date)
+                        :   this.xScale(this.data.at(-365).date), 
+                    this.width
+                ])
 
         this.render();
     }

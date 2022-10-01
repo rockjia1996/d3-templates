@@ -26,7 +26,7 @@ class CandleStick {
                 ])
             .attr("style", 
             `max-width: 100%; 
-            height: auto; height: intrinsic;background-color:#f4f4f4;`)
+            height: auto; height: intrinsic;background-color:white;`)
 
 
         this.innerCanvas = this.outerCanvas.append("g")
@@ -362,7 +362,7 @@ d3.csv('data/JNJ.csv').then(rawData => {
 
     const miniDims = {
         width: 1200,
-        height: 100,
+        height: 80,
         marginLeft: 100,
         marginRight: 100,
         marginTop: 10,
@@ -371,7 +371,17 @@ d3.csv('data/JNJ.csv').then(rawData => {
     }
 
     const chart = new CandleStick("#chart", dims, {}, {}, data);
-    const miniChart = new MiniLineChart("#mini-chart", miniDims, data);
+    const miniChart = new MiniLineChart(
+        "#mini-chart", 
+        miniDims, 
+        {
+            onBrush: (start, end) => {
+                chart.presentingData = 
+                    chart.queryTimePeriod(start, end)
+                chart.render();
+            }
+        },
+        data);
 
     const btns = document.querySelector('#btns').children
     btns[0].onclick = () => chart.queryPast("1d")
