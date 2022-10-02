@@ -128,7 +128,7 @@ class CandleStick {
             .append("line")
             .attr("class", "high-low")
             .transition()
-            .duration(600)
+            .duration(200)
             .attr("y1", d => {
                 if (d.low === d.high) return this.yScale(d.low) - 1.5;
                 else return this.yScale(d.low)
@@ -142,7 +142,7 @@ class CandleStick {
             .append("line")
             .attr("class", "open-close")
             .transition()
-            .duration(600)
+            .duration(200)
             .attr("y1", d => this.yScale(d.open))
             .attr("y2", d => this.yScale(d.close))
             .attr("stroke-width", this.xScale.bandwidth())
@@ -163,7 +163,7 @@ class CandleStick {
                     this.xScale(d.date) + this.xScale.bandwidth() / 2}, 0)`)
         candles.selectAll(".high-low")
             .transition()
-            .duration(600)
+            .duration(200)
             .attr("y1", d => {
                 if (d.low === d.high) return this.yScale(d.low) - 1.5;
                 else return this.yScale(d.low)
@@ -176,7 +176,7 @@ class CandleStick {
         candles
             .selectAll(".open-close")
             .transition()
-            .duration(600)
+            .duration(200)
             .attr("y1", d => this.yScale(d.open))
             .attr("y2", d => this.yScale(d.close))
             .attr("stroke-width", this.xScale.bandwidth())
@@ -197,7 +197,7 @@ class CandleStick {
         yGridLine.enter().append("line")
             .merge(yGridLine)
             .transition()
-            .duration(550)
+            .duration(200)
             .attr("x1", 0)
             .attr("y1", d => this.yScale(d))
             .attr("x2", this.width)
