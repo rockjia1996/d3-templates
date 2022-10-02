@@ -310,7 +310,7 @@ class CandleStick {
         this.render();
     }
 
-    queryTimePeriod(start, end, snapshots=600){
+    queryTimePeriod(start, end, snapshots=520){
         const bisect = d3.bisector(d => d.date);
         const startIndex = bisect.left(this.data, start);
         const endIndex = bisect.left(this.data, end);

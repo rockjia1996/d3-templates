@@ -16,9 +16,7 @@ class MiniLineChart {
                     width + marginRight + marginRight,
                     height + marginTop + marginBottom
                 ])
-            .attr("style",
-                `max-width: 100%; 
-            height: auto; height: intrinsic;`)
+            .attr("style",`max-width:100%; height: auto; height: intrinsic;`)
 
         this.innerCanvas = this.outerCanvas.append("g")
             .attr("width", width)
@@ -56,88 +54,14 @@ class MiniLineChart {
 
         this.brushCall
             .on("brush", d => {
-
-                /*
-                let start = this.xScale.invert(d.selection[0]);
-                let end = this.xScale.invert(d.selection[1]);
-                this.brushConfigs.onBrush(start, end)
-                */
-                               const bisect = d3.bisector(dat => dat.date);
-                const xLeft = d.selection[0]
-                const xRight = d.selection[1]
-
-                let start = this.xScale.invert(xLeft);
-                let end = this.xScale.invert(xRight);
-                const startIndex = bisect.left(this.data, start);
-                const endIndex = bisect.left(this.data, end);
-
-                const maxDataPoints = 600;
-                if (endIndex - startIndex > maxDataPoints) {
-                    const brushCenter = xLeft + 0.5 * (xRight - xLeft)
-
-                    const brushWidth = width -
-                        (this.data.length <= maxDataPoints
-                            ? this.xScale(this.data[0].date)
-                            : this.xScale(this.data.at(-600).date))
-
-
-                    const moveTo = [
-                        brushCenter - 0.49 * brushWidth,
-                        brushCenter + 0.49 * brushWidth
-                    ]
-
-                    this.brushGroup
-                        .call(this.brushCall)
-                        .call(this.brushCall.move, moveTo
-                        )
-                    let start = this.xScale.invert(moveTo[0]);
-                    let end = this.xScale.invert(moveTo[1]);
-
-                    this.brushConfigs.onBrush(start, end)
-
-                }
-                else {
-                    this.brushConfigs.onBrush(start, end)
-                }
+                const dates = 
+                    this.enforceBrushLimit(d.selection[0], d.selection[1]) 
+                this.brushConfigs.onBrush(dates[0], dates[1])
             })
             .on("end", (d) => {
-                const bisect = d3.bisector(dat => dat.date);
-                const xLeft = d.selection[0]
-                const xRight = d.selection[1]
-
-                let start = this.xScale.invert(xLeft);
-                let end = this.xScale.invert(xRight);
-                const startIndex = bisect.left(this.data, start);
-                const endIndex = bisect.left(this.data, end);
-
-                const maxDataPoints = 600;
-                if (endIndex - startIndex > maxDataPoints) {
-                    const brushCenter = xLeft + 0.5 * (xRight - xLeft)
-
-                    const brushWidth = width -
-                        (this.data.length <= maxDataPoints
-                            ? this.xScale(this.data[0].date)
-                            : this.xScale(this.data.at(-600).date))
-
-
-                    const moveTo = [
-                        brushCenter - 0.49 * brushWidth,
-                        brushCenter + 0.49 * brushWidth
-                    ]
-
-                    this.brushGroup
-                        .call(this.brushCall)
-                        .call(this.brushCall.move, moveTo
-                        )
-                    let start = this.xScale.invert(moveTo[0]);
-                    let end = this.xScale.invert(moveTo[1]);
-
-                    this.brushConfigs.onBrush(start, end)
-
-                }
-                else {
-                    this.brushConfigs.onBrush(start, end)
-                }
+                const dates = 
+                    this.enforceBrushLimit(d.selection[0], d.selection[1]) 
+                this.brushConfigs.onBrush(dates[0], dates[1])
             })
 
 
@@ -152,6 +76,41 @@ class MiniLineChart {
                 ])
 
         this.render();
+    }
+
+    enforceBrushLimit(xLeft, xRight, maxDataPoints=600) {
+        const bisect = d3.bisector(dat => dat.date);
+        const { width, height } = this.dimComfigs;
+
+        let start = this.xScale.invert(xLeft);
+        let end = this.xScale.invert(xRight);
+        const startIndex = bisect.left(this.data, start);
+        const endIndex = bisect.left(this.data, end);
+
+        if (endIndex - startIndex > maxDataPoints) {
+            const brushCenter = xLeft + 0.5 * (xRight - xLeft)
+
+            const brushWidth = width -
+                (this.data.length <= maxDataPoints
+                    ? this.xScale(this.data[0].date)
+                    : this.xScale(this.data.at(-600).date))
+
+
+            const moveTo = [
+                brushCenter - 0.49 * brushWidth,
+                brushCenter + 0.49 * brushWidth
+            ]
+
+            this.brushGroup
+                .call(this.brushCall)
+                .call(this.brushCall.move, moveTo)
+            let start = this.xScale.invert(moveTo[0]);
+            let end = this.xScale.invert(moveTo[1]);
+
+            return [start, end] 
+        }
+        else 
+            return [start, end]
     }
 
     render() {
